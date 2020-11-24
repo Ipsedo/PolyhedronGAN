@@ -1,37 +1,38 @@
 import voxlib.voxelize as voxel
-import argparse
-import numpy as np
+
+import torch as th
+
 import matplotlib.pyplot as plt
 
+import argparse
+
+
+def voxelise_model(model_path: str, size: int) -> th.Tensor:
+    points_generator = voxel.voxelize(model_path, resolution=size)
+
+    # one channel
+    model_mat = th.zeros(1, size, size, size)
+
+    for p in points_generator:
+        p_new = p[0] + (size // 2 - 1), \
+                p[1] + (size // 2 - 1), \
+                p[2] + (size // 2 - 1)
+
+        model_mat[0, p_new[0], p_new[1], p_new[2]] = 1
+
+    return model_mat
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Main- voxelise")
-
+    parser = argparse.ArgumentParser("Main - voxelise")
     parser.add_argument("model", type=str, help="STL/OBJ model")
-
     args = parser.parse_args()
 
-    size = 64
+    size_res = 64
 
-    res = voxel.voxelize(args.model, resolution=size)
-
-    points = [p for p in res]
-    min_x, min_y, min_z = 0, 0, 0
-
-    for p in points:
-        min_x = min(min_x, p[0])
-        min_y = min(min_y, p[1])
-        min_z = min(min_z, p[2])
-
-    mat_cub = np.zeros((size, size, size))
-
-    for p in points:
-        p_new = p[0] - min_x, p[1] - min_y, p[2] - min_z
-
-        mat_cub[p_new[0], p_new[1], p_new[2]] = 1
+    mat_cub = voxelise_model(args.model, size_res)
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.voxels(mat_cub)
+    ax.voxels(mat_cub.squeeze(0))
     plt.show()
-
-

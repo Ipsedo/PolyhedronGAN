@@ -2,3 +2,5 @@ git+https://github.com/p-hofmann/MeshReader.git#egg=meshlib
 git+git://github.com/p-hofmann/PyVoxelizer.git#egg=voxlib
 voxlib
 torch==1.7.0
+numpy
+matplotlib
