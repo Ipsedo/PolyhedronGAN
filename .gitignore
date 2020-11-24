@@ -130,3 +130,6 @@ dmypy.json
 
 # out generated 3D models
 out/
+
+# JetBrains file
+.idea/
