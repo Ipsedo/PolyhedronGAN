@@ -25,8 +25,8 @@ def voxelise_model(
         model_path: str, size: int, random_scale: bool
 ) -> th.Tensor:
     if random_scale:
-        scaled_size = int(np.random.uniform(0.2, 0.9) * size)
-        scaled_size = scaled_size - scaled_size % 2
+        scaled_size = int(np.random.uniform(0.9, 1.0) * size)
+        scaled_size -= scaled_size % 2
     else:
         scaled_size = size
 
@@ -37,20 +37,41 @@ def voxelise_model(
     # one channel
     model_mat = th.zeros(1, size, size, size)
 
-    scale_diff = int(size - scaled_size)
-    scale_diff = scale_diff - scale_diff % 2
+    min_x, min_y, min_z = scaled_size, scaled_size, scaled_size
+    max_x, max_y, max_z = -scaled_size, -scaled_size, -scaled_size
 
+    points = []
     for p in points_generator:
-        p_new = p[0] + (scaled_size // 2 - 1), \
-                p[1] + (scaled_size // 2 - 1), \
-                p[2] + (scaled_size // 2 - 1)
+        min_x = min(p[0], min_x)
+        min_y = min(p[1], min_y)
+        min_z = min(p[2], min_z)
 
-        if random_scale:
-            p_new = p_new[0] + scale_diff // 2, \
-                    p_new[1] + scale_diff // 2, \
-                    p_new[2] + scale_diff // 2,
+        max_x = max(p[0], max_x)
+        max_y = max(p[1], max_y)
+        max_z = max(p[2], max_z)
 
-        model_mat[0, p_new[0], p_new[1], p_new[2]] = 1
+        points.append(p)
+
+    for p in points:
+        p_new = p[0] - min_x, \
+                p[1] - min_y, \
+                p[2] - min_z
+
+        p_new_2 = p_new[0] + size // 2, \
+                  p_new[1] + size // 2, \
+                  p_new[2] + size // 2
+
+        try:
+            model_mat[0, p_new[0], p_new[1], p_new[2]] = 1
+        except Exception as e:
+            print(min_x, min_y, min_z)
+            print(max_x, max_y, max_z)
+            print(size)
+            print(scaled_size)
+            print(p)
+            print(p_new)
+            print(p_new_2)
+            raise e
 
     return model_mat
 
@@ -76,7 +97,7 @@ if __name__ == '__main__':
 
     if args.mode == "read":
         print("read")
-        mat_cub = voxelise_model(args.model, args.size, False)
+        mat_cub = voxelise_model(args.model, args.size, True)
 
         fig = plt.figure()
         ax = fig.gca(projection='3d')
@@ -85,7 +106,8 @@ if __name__ == '__main__':
     elif args.mode == "generate":
         print("generate")
 
-        res_tensor = th.empty(args.nb_example, 1, args.size, args.size, args.size)
+        res_tensor = th.empty(args.nb_example, 1, args.size, args.size,
+                              args.size)
 
         for i in range(args.nb_example):
             print(i, "/", args.nb_example)
