@@ -2,7 +2,13 @@ import voxlib.voxelize as voxel
 import stl
 import numpy as np
 
+from voxelfuse.voxel_model import VoxelModel, Axes
+import tqdm
+
+import utils
+
 import torch as th
+import torch.nn.functional as fun
 
 import matplotlib.pyplot as plt
 import os
@@ -76,6 +82,51 @@ def voxelise_model(
     return model_mat
 
 
+def voxelise_model_2(model_path: str, size: int, random_scale: bool) -> th.Tensor:
+    if random_scale:
+        scaled_size = int(np.random.uniform(0.5, 1.0) * size)
+        scaled_size -= scaled_size % 2
+    else:
+        scaled_size = size
+
+    utils.block_print()
+    mesh = VoxelModel.fromMeshFile(
+        model_path, resolution=scaled_size
+    )
+
+    rand_vec = np.random.rand(3) * 2 - 1
+    rand_vec /= np.linalg.norm(rand_vec)
+
+    mesh = mesh.rotate(np.random.rand() * 360., Axes.X)
+    mesh = mesh.rotate(np.random.rand() * 360., Axes.Y)
+    mesh = mesh.rotate(np.random.rand() * 360., Axes.Z)
+    mesh = mesh.scaleToSize((scaled_size, scaled_size, scaled_size))
+
+    utils.enable_print()
+
+    to_pad = [
+        size - mesh.voxels.shape[0],
+        size - mesh.voxels.shape[1],
+        size - mesh.voxels.shape[2]
+    ]
+
+    to_pad = [
+        to_pad[2] // 2,
+        to_pad[2] // 2 + to_pad[2] % 2,
+
+        to_pad[1] // 2,
+        to_pad[1] // 2 + to_pad[1] % 2,
+
+        to_pad[0] // 2,
+        to_pad[0] // 2 + to_pad[0] % 2,
+    ]
+
+    return fun.pad(
+        th.tensor(mesh.voxels.astype(np.int16)).unsqueeze(0),
+        to_pad
+    )
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Main - voxelise")
     parser.add_argument("model", type=str, help="STL/OBJ model")
@@ -90,14 +141,15 @@ if __name__ == '__main__':
     gen_parser = sub_parser.add_parser("generate")
 
     gen_parser.add_argument("nb_example", type=int)
-    gen_parser.add_argument("--stl-out-path", type=str, required=True)
     gen_parser.add_argument("--tensor-out-path", type=str, required=True)
 
     args = parser.parse_args()
 
     if args.mode == "read":
         print("read")
-        mat_cub = voxelise_model(args.model, args.size, True)
+        mat_cub = voxelise_model_2(args.model, args.size, True)
+
+        print(mat_cub.size())
 
         fig = plt.figure()
         ax = fig.gca(projection='3d')
@@ -109,14 +161,9 @@ if __name__ == '__main__':
         res_tensor = th.empty(args.nb_example, 1, args.size, args.size,
                               args.size)
 
-        for i in range(args.nb_example):
-            print(i, "/", args.nb_example)
-            gen_rand_rotation(args.model, args.stl_out_path + f"/out_{i}.stl")
-
-            res_tensor[i, :, :, :, :] = voxelise_model(
-                args.stl_out_path + f"/out_{i}.stl", args.size, True
+        for i in tqdm.tqdm(range(args.nb_example)):
+            res_tensor[i, :, :, :, :] = voxelise_model_2(
+                args.model, args.size, True
             )
-
-            os.remove(args.stl_out_path + f"/out_{i}.stl")
 
         th.save(res_tensor, args.tensor_out_path)
