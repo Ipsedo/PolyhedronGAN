@@ -139,9 +139,12 @@ if __name__ == '__main__':
 
     read_parser = sub_parser.add_parser("read")
     gen_parser = sub_parser.add_parser("generate")
+    view_parser = sub_parser.add_parser("view")
 
     gen_parser.add_argument("nb_example", type=int)
     gen_parser.add_argument("--tensor-out-path", type=str, required=True)
+
+    view_parser.add_argument("tensor_file", type=str)
 
     args = parser.parse_args()
 
@@ -167,3 +170,11 @@ if __name__ == '__main__':
             )
 
         th.save(res_tensor, args.tensor_out_path)
+    elif args.mode == "view":
+        print("view")
+
+        models_tensor = th.load(args.tensor_file)
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.voxels(models_tensor[100].squeeze(0))
+        plt.show()
