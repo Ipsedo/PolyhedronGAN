@@ -23,19 +23,19 @@ class Generator(nn.Module):
                 kernel_size=3, stride=2,
                 output_padding=1, padding=1
             ),
-            nn.ReLU(),
+            nn.SELU(),
             nn.ConvTranspose3d(
                 10, 6,
                 kernel_size=5, stride=2,
                 padding=2, output_padding=1
             ),
-            nn.ReLU(),
+            nn.SELU(),
             nn.ConvTranspose3d(
                 6, 1,
                 kernel_size=5, stride=2,
                 padding=2, output_padding=1
             ),
-            ReLU1()
+            nn.Hardsigmoid()
         )
 
     def forward(self, x_rand: th.Tensor) -> th.Tensor:
@@ -53,24 +53,24 @@ class Disciminator(nn.Module):
                 kernel_size=3, padding=1
             ),
             nn.MaxPool3d(2, 2),
-            nn.ReLU(),
+            nn.SELU(),
             nn.Conv3d(
                 4, 8,
                 kernel_size=5, padding=2
             ),
             nn.MaxPool3d(2, 2),
-            nn.ReLU(),
+            nn.SELU(),
             nn.Conv3d(
                 8, 10,
                 kernel_size=5, padding=2
             ),
             nn.MaxPool3d(2, 2),
-            nn.ReLU()
+            nn.SELU()
         )
 
         self.__lins = nn.Sequential(
             nn.Linear(10 * 8 ** 3, 4096),
-            nn.ReLU(),
+            nn.SELU(),
             nn.Linear(4096, 1),
             nn.Sigmoid()
         )
