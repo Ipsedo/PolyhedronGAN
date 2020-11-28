@@ -28,7 +28,7 @@ if __name__ == '__main__':
     disc.cuda()
 
     disc_lr = 3e-5
-    gen_lr = 2e-5
+    gen_lr = 3e-5
 
     disc_optimizer = th.optim.Adam(disc.parameters(), lr=disc_lr)
     gen_optimizer = th.optim.Adam(gen.parameters(), lr=gen_lr)
@@ -105,3 +105,12 @@ if __name__ == '__main__':
                 f"gen_gr = {gen_grad_norm.item():.4f}, "
                 f"disc_gr = {disc_grad_norm.item():.4f}"
             )
+
+        with th.no_grad():
+            gen.eval()
+            rand_gen_sound = __gen_rand(10).cuda()
+
+            gen_model = gen(rand_gen_sound).cpu().detach()
+            th.save(gen_model, f"./out/gen_model_{e}.pt")
+
+
