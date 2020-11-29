@@ -82,7 +82,8 @@ def voxelise_model(
     return model_mat
 
 
-def voxelise_model_2(model_path: str, size: int, random_scale: bool) -> th.Tensor:
+def voxelise_model_2(model_path: str, size: int,
+                     random_scale: bool) -> th.Tensor:
     if random_scale:
         scaled_size = int(np.random.uniform(0.5, 1.0) * size)
         scaled_size -= scaled_size % 2
@@ -176,5 +177,5 @@ if __name__ == '__main__':
         models_tensor = th.load(args.tensor_file)
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.voxels(models_tensor[100].squeeze(0))
+        ax.voxels(models_tensor[0].squeeze(0))
         plt.show()

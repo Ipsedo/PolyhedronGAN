@@ -19,21 +19,27 @@ class Generator(nn.Module):
 
         self.__convs = nn.Sequential(
             nn.ConvTranspose3d(
-                16, 10,
-                kernel_size=3, stride=2,
-                output_padding=1, padding=1
+                32, 20,
+                kernel_size=5, stride=2,
+                output_padding=1, padding=2
+            ),
+            nn.SELU(),
+            nn.ConvTranspose3d(
+                20, 10,
+                kernel_size=5, stride=2,
+                padding=2, output_padding=1
             ),
             nn.SELU(),
             nn.ConvTranspose3d(
                 10, 6,
-                kernel_size=5, stride=2,
-                padding=2, output_padding=1
+                kernel_size=3, stride=2,
+                padding=1, output_padding=1
             ),
             nn.SELU(),
             nn.ConvTranspose3d(
                 6, 1,
-                kernel_size=5, stride=2,
-                padding=2, output_padding=1
+                kernel_size=3, stride=1,
+                padding=1
             ),
             nn.Hardsigmoid()
         )
@@ -94,7 +100,7 @@ if __name__ == '__main__':
     gen = Generator()
     disc = Disciminator()
 
-    x = th.rand(3, 16, 8, 8, 8)
+    x = th.rand(3, 32, 8, 8, 8)
 
     o = gen(x)
 

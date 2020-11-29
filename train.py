@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     data = th.load(args.tensor_file)
 
-    rand_channel = 16
+    rand_channel = 32
 
     mean_vec = th.randn(rand_channel)
     rand_mat = th.randn(rand_channel, rand_channel)
@@ -27,21 +27,22 @@ if __name__ == '__main__':
     gen.cuda()
     disc.cuda()
 
-    disc_lr = 3e-5
-    gen_lr = 3e-5
+    disc_lr = 1e-5
+    gen_lr = 2e-5
 
-    disc_optimizer = th.optim.Adam(disc.parameters(), lr=disc_lr)
-    gen_optimizer = th.optim.Adam(gen.parameters(), lr=gen_lr)
+    disc_optimizer = th.optim.SGD(disc.parameters(), lr=disc_lr, momentum=0.5)
+    gen_optimizer = th.optim.SGD(gen.parameters(), lr=gen_lr, momentum=0.9)
 
 
     def __gen_rand(
             curr_batch_size: int
     ) -> th.Tensor:
         return multi_norm.sample(
-            (curr_batch_size, 8, 8, 8)).permute(0, 4, 1, 2, 3)
+            (curr_batch_size, 8, 8, 8)
+        ).permute(0, 4, 1, 2, 3)
 
 
-    nb_epoch = 10
+    nb_epoch = 30
     batch_size = 4
     nb_batch = data.size(0) // batch_size
 
@@ -112,5 +113,3 @@ if __name__ == '__main__':
 
             gen_model = gen(rand_gen_sound).cpu().detach()
             th.save(gen_model, f"./out/gen_model_{e}.pt")
-
-
