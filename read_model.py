@@ -177,5 +177,5 @@ if __name__ == '__main__':
         models_tensor = th.load(args.tensor_file)
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.voxels(models_tensor[0].squeeze(0))
+        ax.voxels(models_tensor[2].squeeze(0))
         plt.show()

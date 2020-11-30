@@ -20,8 +20,8 @@ class Generator(nn.Module):
         self.__convs = nn.Sequential(
             nn.ConvTranspose3d(
                 32, 20,
-                kernel_size=5, stride=2,
-                output_padding=1, padding=2
+                kernel_size=7, stride=2,
+                output_padding=1, padding=3
             ),
             nn.SELU(),
             nn.ConvTranspose3d(
